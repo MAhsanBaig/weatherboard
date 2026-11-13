@@ -1,16 +1,131 @@
-# React + Vite
+# WeatherBoard 🌤️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+WeatherBoard is a responsive weather dashboard built with React and Vite. It allows users to search for cities, view current weather conditions, explore a 5-day forecast, and save favourite cities.
 
-Currently, two official plugins are available:
+## Project Links
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Live Demo:** Not deployed yet
+- **GitHub Repository:** https://github.com/MAhsanBaig/weatherboard
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- City search with autocomplete suggestions.
+- Current weather information using real API data.
+- Temperature, feels-like temperature, humidity, and wind speed.
+- 5-day weather forecast.
+- Weather condition icons based on weather codes.
+- Favourite cities saved in browser localStorage.
+- Celsius and Fahrenheit temperature display.
+- Loading and error handling.
+- Responsive interface for desktop, tablet, and mobile.
 
-## Expanding the ESLint configuration
+## Technology Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React
+- Vite
+- JavaScript
+- Tailwind CSS
+- Lucide React
+- Open-Meteo Weather API
+- Open-Meteo Geocoding API
+- Browser localStorage
+
+## APIs
+
+### Open-Meteo Weather API
+
+Used to retrieve current weather conditions and daily forecasts.
+
+https://open-meteo.com/
+
+### Open-Meteo Geocoding API
+
+Used to search for cities and retrieve geographical coordinates.
+
+https://open-meteo.com/en/docs/geocoding-api
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js
+- npm
+- Git
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/MAhsanBaig/weatherboard.git
+cd weatherboard
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open the local URL displayed in your terminal.
+
+### Production Build
+
+```bash
+npm run build
+```
+
+Preview the production build:
+
+```bash
+npm run preview
+```
+
+## Project Structure
+
+```text
+src/
+├── components/
+├── services/
+├── utils/
+├── App.jsx
+└── main.jsx
+```
+
+- `components/` contains reusable dashboard UI components.
+- `services/` contains API integration and data-fetching logic.
+- `utils/` contains reusable weather formatting and helper functions.
+
+## Architecture Decisions
+
+- React components are separated by responsibility to improve maintainability.
+- Weather API calls are kept in service modules rather than mixed into presentation components.
+- Open-Meteo was selected because it provides free weather and geocoding APIs without requiring an API key.
+- localStorage is used to persist favourite cities across browser sessions.
+- Responsive layouts support different screen sizes.
+
+## Known Limitations
+
+- The current city search uses Open-Meteo Geocoding rather than the GeoDB Cities API specified in the assignment.
+- A public deployment URL has not yet been added.
+- PWA installation, service-worker caching, offline weather access, and scheduled notifications must be completed and verified before they can be considered supported.
+- Browser notification functionality depends on browser support and user permission.
+
+## Future Improvements
+
+- Complete PWA installation and offline functionality.
+- Add daily weather reminder notifications.
+- Improve autocomplete and form validation.
+- Add further accessibility and performance improvements.
+
+## Author
+
+**Muhammad Ahsan Baig**
+
+GitHub: https://github.com/MAhsanBaig
