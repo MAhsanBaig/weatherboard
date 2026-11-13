@@ -12,15 +12,19 @@ import {
   formatForecastDay,
 } from "../utils/weatherUtils";
 import WeatherDetails from "../components/WeatherDetails";
+import ReminderSettings from "../components/ReminderSettings";
 
 const STORAGE_KEY = "weatherboard-favourite-cities";
+
+const WEATHER_CACHE_KEY = "weatherboard-last-weather";
+
 
 function WeatherDashboard() {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
-
+const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [temperatureUnit, setTemperatureUnit] = useState("celsius");
 
   const [selectedCity, setSelectedCity] = useState({
@@ -40,9 +44,13 @@ function WeatherDashboard() {
     }
   });
 
-  useEffect(() => {
+useEffect(() => {
+  try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(favourites));
-  }, [favourites]);
+  } catch (error) {
+    console.warn("Favourite storage unavailable:", error);
+  }
+}, [favourites]);
 
   const handleAddFavourite = () => {
     if (!selectedCity || favourites.length >= 5) return;
@@ -58,18 +66,25 @@ function WeatherDashboard() {
     }
   };
 
-  const handleRemoveFavourite = (cityToRemove) => {
-    setFavourites((previous) =>
-      previous.filter(
-        (city) =>
-          city.latitude !== cityToRemove.latitude ||
-          city.longitude !== cityToRemove.longitude
-      )
-    );
-  };
+ const handleRemoveFavourite = (cityToRemove) => {
+  const confirmed = window.confirm(
+    `Remove ${cityToRemove.name} from your favourite cities?`
+  );
+
+  if (!confirmed) return;
+
+  setFavourites((previous) =>
+    previous.filter(
+      (city) =>
+        city.latitude !== cityToRemove.latitude ||
+        city.longitude !== cityToRemove.longitude
+    )
+  );
+};
   const handleRetry = () => {
   setRetryCount((previous) => previous + 1);
 };
+
 
 
 useEffect(() => {
@@ -79,21 +94,55 @@ useEffect(() => {
     try {
       setLoading(true);
       setError("");
-      setWeather(null);
 
       const data = await getWeather(
         selectedCity.latitude,
         selectedCity.longitude
       );
 
-      if (isActive) {
-        setWeather(data);
+      if (!isActive) return;
+
+      setWeather(data);
+
+      try {
+        localStorage.setItem(
+          WEATHER_CACHE_KEY,
+          JSON.stringify({
+            city: selectedCity,
+            weather: data,
+            savedAt: Date.now(),
+          })
+        );
+      } catch (storageError) {
+        console.warn("Weather cache unavailable:", storageError);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Weather request failed:", err);
 
-      if (isActive) {
-        setError("Unable to load weather. Please try again.");
+      if (!isActive) return;
+
+      try {
+        const cached = localStorage.getItem(WEATHER_CACHE_KEY);
+        const saved = cached ? JSON.parse(cached) : null;
+
+        if (
+          saved?.weather &&
+          saved?.city?.latitude === selectedCity.latitude &&
+          saved?.city?.longitude === selectedCity.longitude
+        ) {
+          setWeather(saved.weather);
+          setError("");
+        } else {
+          setWeather(null);
+          setError(
+            navigator.onLine
+              ? "We couldn't retrieve weather for this city. Please check your connection and try again."
+              : "You're offline and no saved weather is available for this city. Reconnect to load its weather."
+          );
+        }
+      } catch (storageError) {
+        setWeather(null);
+        setError("Weather couldn't be loaded. Please reconnect and try again.");
       }
     } finally {
       if (isActive) {
@@ -109,6 +158,18 @@ useEffect(() => {
   };
 }, [selectedCity, retryCount]);
 
+useEffect(() => {
+  const handleOnline = () => setIsOnline(true);
+  const handleOffline = () => setIsOnline(false);
+
+  window.addEventListener("online", handleOnline);
+  window.addEventListener("offline", handleOffline);
+
+  return () => {
+    window.removeEventListener("online", handleOnline);
+    window.removeEventListener("offline", handleOffline);
+  };
+}, []);
   // Convert Celsius to Fahrenheit when required
   const convertTemperature = (value) => {
     if (value == null || value === "--") return "--";
@@ -174,6 +235,14 @@ const maxWindSpeed =
 
   return (
     <main className="min-h-screen bg-[#F7F8FA] text-slate-900">
+      {!isOnline && (
+  <div
+    role="status"
+    className="bg-amber-100 px-4 py-3 text-center text-sm font-medium text-amber-900"
+  >
+    You're offline — showing the last saved weather when available.
+  </div>
+)}
       <Header
         onCitySelect={setSelectedCity}
         temperatureUnit={temperatureUnit}
@@ -290,7 +359,7 @@ const maxWindSpeed =
       />
     </section>
 
-    <aside>
+    <aside >
       <FavouriteCities
         favourites={favourites}
         selectedCity={selectedCity}
@@ -298,11 +367,14 @@ const maxWindSpeed =
         onCitySelect={setSelectedCity}
         onRemoveFavourite={handleRemoveFavourite}
       />
+  <ReminderSettings />
+
     </aside>
   </div>
 ) : null}
 
       </div>
+
 
       <footer className="mx-auto max-w-[1400px] px-4 py-6 text-center text-xs text-slate-400 sm:px-6 lg:px-10">
         WeatherBoard © 2026 · Powered by Ahsanbaig
